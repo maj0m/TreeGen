@@ -10,7 +10,6 @@ var minRot = 20;
 var maxRot = 40;
 var maxTurns = 5;
 
-var maxTurnsSlider;
 var generateButton;
 
 function setup() {
@@ -33,7 +32,6 @@ function draw() {
 
 function branch(len, rot, turns) {
   push();
-
 
   //branches
   if(len > minLength && abs(turns) < maxTurns) {
