@@ -1,135 +1,75 @@
-var leafSize;
-var leafAlpha;
-var minBranchLength;
-var maxBranchLength;
-var branchThickness;
-var leafColor;
-var branchColor;
-
-var maxTurns;
-var minLengthMultiplier;
-var maxLengthMultiplier;
-
-const minRot = 20;
-const maxRot = 40;
-
 var generateButton;
+var tree;
 
 function setup() {
   generateButton = createButton("Generate Tree");
   generateButton.position(10, 20);
-  generateButton.mouseReleased(update);
- 
+  generateButton.mousePressed(newTree);
 
   createCanvas(windowWidth, windowHeight);
   angleMode(DEGREES);
-  update();
-  noLoop();
+  
+  tree = new Tree(windowWidth/2, windowHeight/2 + 250, 8, 80, 0.5, 1, 16, 20, 40, 5, 14, [70, 40, 20], [80, 120, 40, 255]);
+  tree.buildTree();
+
+  //noLoop();
 }
 
 function draw() {
   background(100);
- 
-  fill(0, 0, 0);
-  textSize(32);
-  text('Presets:\nRegular: Press "1"\nCherry: Press "2"\nWillow: Press "3"', 10, 80);
+  
+  textSize(16);
+  text('Controls:\nGenerate tree: "SpaceBar"\nScale Up: "W" / "UpArrow"\nScale Down: "S" / "DownArrow"\nMove root: "LeftMouseButton"', 10, 60);
+  text('Presets:\nPress "1" for Oak (Default)\nPress "2" for Cherry\nPress "3" for Willow', 10, 180);
+  
 
-  translate(width / 2, height / 2 + 250);
-  branch(maxBranchLength, 0, 0);
+  tree.drawTree();
+
 }
 
-function branch(len, rot, turns) {
-  push();
-
-  //Branches
-  if(len > minBranchLength && abs(turns) < maxTurns) {
-    rotate(rot);
-    strokeWeight(map(len, minBranchLength, maxBranchLength, 1, branchThickness));
-    stroke(branchColor);
-    line(0, 0, 0, -len);
-    translate(0, -len);
-    branch(len * random(minLengthMultiplier, maxLengthMultiplier), random(minRot, maxRot), turns+1);
-    branch(len * random(minLengthMultiplier, maxLengthMultiplier), random(-minRot, -maxRot), turns-1);
-  }
-
-  //Leaves
-  else if(len <= minBranchLength) {
-    var r = leafColor[0] + random(-20, 20);
-    var g = leafColor[1] + random(-20, 20);
-    var b = leafColor[2] + random(-20, 20);
-    fill(r, g, b, leafAlpha);
-    noStroke();
-    ellipse(0, 0, leafSize);
-  }
-
-  pop();
+function newTree() {
+  tree.clearTree();
+  tree.buildTree();
 }
 
-//----------SETTINGS----------//
-
-class Settings {
-  constructor(_leafSize, _leafAlpha, _minBranchLength, _maxBranchLength, _branchThickness, _leafColor,
-              _branchColor, _maxTurns, _minLengthMultiplier, _maxLengthMultiplier) {
-    this.leafSize             = _leafSize;
-    this.leafAlpha            = _leafAlpha;
-    this.minBranchLength      = _minBranchLength;
-    this.maxBranchLength      = _maxBranchLength;
-    this.branchThickness      = _branchThickness;
-    this.leafColor            = _leafColor;
-    this.branchColor          = _branchColor;
-    this.maxTurns             = _maxTurns;
-    this.minLengthMultiplier  = _minLengthMultiplier;
-    this.maxLengthMultiplier  = _maxLengthMultiplier;
+function mouseClicked() {
+  if( mouseX > 200 && mouseY > 200) { //Bal oldali textre es kepernyo felso reszere ne lehessen fat rakni
+    tree.move(mouseX, mouseY);
   }
 }
-
-var settings;
-var preset1 = new Settings(15, 255, 8, 80, 24, [80, 120, 40], [70, 40, 20], 5, 0.5, 1);
-var preset2 = new Settings(12, 150, 5, 75, 28, [200,136,210], [34,27,24], 5, 0.6, 0.95);
-var preset3 = new Settings(15, 190, 8, 90, 30, [104, 145, 66], [57,43,36], 7, 0.6, 1);
-settings = preset1;
 
 function keyPressed() {
-  if(keyCode == 49) {
-    settings = preset1;
+  if(keyCode == 32) { // Space - Generate new tree
+    newTree();
   }
 
-  else if(keyCode == 50) {
-    settings = preset2;
+  else if(keyCode == 49) { // 1 - Regular
+    tree = new Tree(tree.rootX, tree.rootY, 8, 80, 0.5, 1, 16, 20, 40, 5, 14, [70, 40, 20], [80, 120, 40, 255]);
+    newTree();
   }
 
-  else if(keyCode == 51) {
-    settings = preset3;
+  else if(keyCode == 50) { // 2 - Cherry
+    tree = new Tree(tree.rootX, tree.rootY, 5, 75, 0.6, 0.95, 24, 20, 30, 5, 12, [34,27,24], [200,136,210, 150]);
+    newTree();
+  }
+
+  else if(keyCode == 51) { // 3 - Willow
+    tree = new Tree(tree.rootX, tree.rootY, 8, 90, 0.6, 0.95, 30, 20, 40, 7, 15, [57,43,36], [104, 145, 66, 180]);
+    newTree();
+  }
+
+  else if(keyCode == 87 || keyCode == 38) { // W vagy UpArrow - Scale up
+    tree.scale(1.05);
+  }
+
+  else if(keyCode == 83 || keyCode == 40) { // S vagy DownArrow - Scale down
+    tree.scale(0.95);
   }
 }
 
-//----------GUI----------//
 
-var gui = new dat.GUI();
-gui.add(settings, 'leafSize' ,5,30,1);
-gui.add(settings, 'leafAlpha',0,255, 1);
-gui.add(settings, 'minBranchLength', 3, 20, 1);
-gui.add(settings, 'maxBranchLength', 50, 100, 1);
-gui.add(settings, 'branchThickness', 5, 40, 1);
-gui.addColor(settings, 'leafColor');
-gui.addColor(settings, 'branchColor');
 
-var advancedOptions = gui.addFolder('Advanced');
-advancedOptions.add(settings, 'maxTurns', 2, 20, 1);
-advancedOptions.add(settings, 'minLengthMultiplier', 0.4, 0.8, 0.01);
-advancedOptions.add(settings, 'maxLengthMultiplier', 0.8, 1, 0.01);
 
-function update() {
-  leafSize = settings.leafSize;
-  leafAlpha = settings.leafAlpha;
-  minBranchLength = settings.minBranchLength;
-  maxBranchLength = settings.maxBranchLength;
-  branchThickness = settings.branchThickness;
-  leafColor = settings.leafColor;
-  branchColor = settings.branchColor;
-  maxTurns = settings.maxTurns;
-  minLengthMultiplier = settings.minLengthMultiplier;
-  maxLengthMultiplier = settings.maxLengthMultiplier;
   
-  redraw();
-}
+  
+
